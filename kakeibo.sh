@@ -1,4 +1,5 @@
 #!/bin/bash
+## Kakeibo-Data is Input To Graphite
 ## Filename : YYYYMM.csv
 ## Ex) /root/kakeibo.sh YYYYMM.csv
 
@@ -21,7 +22,7 @@ CLASS=($(cat $FILE  | grep "支出" | awk -F, '{print $3}'| sort |uniq | grep -v
 
 for class in  `echo ${CLASS[*]}` ;do
 	#cat ${FILE} | grep "支出" | grep "$class" |awk -F, -v date="$DATE_S" '{m+=$6} END{print  "a."$3 " "m  " " date ; }'
-	#cat ${FILE} | grep "支出" | grep "$class" |awk -F, -v date="$DATE_S" '{m+=$6} END{print  "a."$3 " "m  " " date ; }' | nc -q0 ${SERVER} ${PORT}
+	cat ${FILE} | grep "支出" | grep "$class" |awk -F, -v date="$DATE_S" '{m+=$6} END{print  "a."$3 " "m  " " date ; }' | nc -q0 ${SERVER} ${PORT}
 :
 done
 
@@ -29,7 +30,7 @@ CLASS_B=($(cat $FILE  | grep "収入" | awk -F, '{print $3}'| sort |uniq | grep 
 
 for class in  `echo ${CLASS_B[*]}` ;do
 	#cat ${FILE} | grep "収入" | grep "$class" |awk -F, -v date="$DATE_S" '{m+=$6} END{print  "b."$3 " "m  " " date ; }'
-	#cat ${FILE} | grep "収入" | grep "$class" |awk -F, -v date="$DATE_S" '{m+=$6} END{print  "b."$3 " "m  " " date ; }' | nc -q0 ${SERVER} ${PORT}
+	cat ${FILE} | grep "収入" | grep "$class" |awk -F, -v date="$DATE_S" '{m+=$6} END{print  "b."$3 " "m  " " date ; }' | nc -q0 ${SERVER} ${PORT}
 :
 done
 
