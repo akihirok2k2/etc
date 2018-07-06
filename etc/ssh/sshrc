@@ -1,0 +1,70 @@
+## SSHの環境変数より、CLIENTのIPを取得
+##  $ echo $SSH_CLIENT  
+##  192.168.132.1 48265 22
+SOURCE_IP=${SSH_CLIENT%% *}
+
+# 信頼するIPをスペース区切りで指定
+readonly TRUST_IP_LIST="10.10.10.10"
+
+# リストと比較して信頼していないIPからならメール送付
+for HOST in $TRUST_IP_LIST
+do
+    if [ $HOST == $SOURCE_IP ]; then
+      exit 0
+    fi
+done
+
+
+## Sending mail 
+echo "\"$USER\" has logged in from $SSH_CLIENT at `date +"%Y/%m/%d %p %I:%M:%S"` to $HOSTNAME " | mail -s "$HOSTNAME sshd login alert" -r root@sakura.kanakomi.com tadaakikawano@gmail.com 
+
+
+## Notificating Slack (APIの値は書き換えて)
+readonly URL="https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+
+## ログイン中の全IPを表示する場合はこのコメントアウトを外すと良いかと  
+#SOURCE_IP=`who | awk '{print $6}' | cut -d '(' -f 2 | sed -e 's/)//g'`
+#USER=`w -hsi | awk '{print $1}'`
+
+## ログイン時間を取得
+day=`lastlog | grep -w "${USER}" | awk '{print $4}'`
+month=`lastlog | grep -w "${USER}" | awk '{print $5}'`
+date=`lastlog | grep -w "${USER}" | awk '{print $6}'`
+time=`lastlog | grep -w "${USER}" | awk '{print $7}'`
+
+payload="payload={
+  \"channel\": \"#notice\", 
+  \"username\": \"SSH CHECKER MAN\",
+  \"icon_emoji\": \":man-gesturing-no:\",
+  \"attachments\": [
+    {
+      \"color\": \"#D00000\",
+            \"title\": \"[Warning] No-Trusted IP SSH Connection has established.\",
+      \"fallback\": \"SSH Connection has established.\",
+      \"fields\": [
+        {
+          \"title\": \"HOSTNAME\",
+          \"value\": \"${HOSTNAME}\",
+          \"short\": true
+        },
+        {
+          \"title\": \"Date / Time\",
+          \"value\": \"${month} ${date} (${day})  ${time}\",
+          \"short\": true
+        },
+                {
+                  \"title\": \"User Name\",
+                  \"value\": \"${USER}\",
+                  \"short\": true
+                },
+        {
+          \"title\": \"from\",
+          \"value\": \"${SOURCE_IP}\",
+          \"short\": true
+        }
+      ]
+    }
+  ]
+}"
+
+curl -m 5 --data-urlencode "${payload}" "${URL}" > /dev/null 2>&1
