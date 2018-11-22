@@ -5,10 +5,14 @@ set -x
 yum -y update || exit 1
 
 # set up the repository
-yum install -y yum-utils device-mapper-persistent-data lvm2 jq || exit 1
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo || exit 1
+yum install -y epel-release
+sed -i -e "s/enabled=1/enabled=0/g" /etc/yum.repos.d/epel.repo
+sed -i -e "s/enabled=1/enabled=0/g" /etc/yum.repos.d/epel-testing.repo
+yum install -y yum-utils device-mapper-persistent-data lvm2  || exit 1
+yum install -y --enablerepo=epel jq
 
 # install docker ce
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo || exit 1
 yum makecache fast || exit 1
 yum install -y "docker-ce" || exit 1
 
