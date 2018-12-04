@@ -14,6 +14,7 @@ PRINT_USAGE () {
       -m | --memory : Memory Resource Check
       -p | --proccess : Proccess Check
       -i | --iops : IOPS Resource Check
+      -t | --traffic : Netwowk Resource Check
       -h | --help : "
     exit 1
 }
@@ -71,6 +72,28 @@ echo "
   w_await :	作成された書き込み要求が完了するまでの平均時間
   svctm   :	デバイスに発行されたI/O要求の平均サービス時間（廃止予定）
   ％util  :	デバイスの帯域幅使用率
+
+- traffic
+-- sar -n DEV 1 3
+  rxpck/s  :	1秒間あたりの受信パケット数
+  txpck/s  :	1秒間あたりの送信パケット数
+  rxbyt/s  :	1秒間あたりの受信バイト数
+  txbyt/s  :	1秒間あたりの送信バイト数
+  rxcmp/s  :	1秒間あたりの圧縮受信パケット数 (for cslip etc.)
+  txcmp/s  :	1秒間あたりの圧縮送信パケット数
+  rxmcst/s :	1秒間あたりのマルチキャスト受信パケット数
+
+
+-- sar -n EDEV
+  rxerr/s  :	1秒あたり総受信不良パケット数
+  txerr/s  :	パケット送信時に発生した1秒あたりエラー発生数
+  coll/s   :	パケット送信時に発生した1秒あたりパケット衝突数
+  rxdrop/s :	Linuxバッファ上の領域不足によって発生した、1秒あたりの受信パケットのドロップ数
+  txdrop/s :	Linuxバッファ上の領域不足によって発生した、1秒あたりの送信パケットのドロップ数
+  txcarr/s :	パケット送信時に発生した1秒あたりのキャリアエラー数
+  rxfram/s :	パケット受信時に発生した、1秒あたりフレーム・アラインメント・エラー数
+  rxfifo/s :...	1秒あたりの受信パケットのFIFOオーバーラン・エラー数
+  txfifo/s :	1秒あたりの送信パケットのFIFOオーバーラン・エラー数
 "
 }
 
@@ -165,6 +188,15 @@ IOPS_CHECK(){
   iostat -d -k -x
   echo -e
   echo -e
+}
+
+TRAFFIC_CHECK(){
+  echo -e "\e[1;31m##### ip a s \e[0m"
+  ip a s
+  echo -e "\e[1;31m##### sar -n DEV 1 3\e[0m"
+  sar -n DEV 1 3
+  echo -e "\e[1;31m##### sar -n EDEV 1 3\e[0m"
+  sar -n EDEV 1 3
 
 
 }
@@ -173,7 +205,7 @@ IOPS_CHECK(){
 
 [ "$#" -ge 1 ] || PRINT_USAGE
 
-while getopts :ucmpih OPT
+while getopts :ucmpith OPT
 do
 	case ${OPT} in
 		"u" ) UPTIME_CHECK ;;
@@ -181,6 +213,7 @@ do
 		"m" ) MEMORY_CHECK ;;
 		"p" ) PROCCESS_CHECK ALL ;;
 		"i" ) IOPS_CHECK ;;
+		"t" ) TRAFFIC_CHECK ;;
 		"h" ) HELP;;
 		\? ) PRINT_USAGE ;;
 	esac
